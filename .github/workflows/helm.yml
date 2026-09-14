@@ -16,4 +16,4 @@ jobs:
       charts-dir: 'charts'
       helm-repos: |
         longhorn https://charts.longhorn.io
-      subpath: 'talos'
+      subpath: 'charts/talos'
