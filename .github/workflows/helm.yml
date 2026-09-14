@@ -14,3 +14,4 @@ jobs:
     uses: joeckr/ci-templates/.github/workflows/push-helm-ghcr.yml@c08d40f0bf0cd80de6b2f1fa2f018f944265b807 # v1.8.0
     with:
       charts-dir: 'charts'
+      subpath: 'talos'
