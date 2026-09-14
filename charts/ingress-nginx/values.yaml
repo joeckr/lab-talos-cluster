@@ -3,7 +3,7 @@ ingress-nginx:
     kind: DaemonSet
     hostNetwork: true
     dnsPolicy: ClusterFirstWithHostNet
-    
+
     service:
       type: ClusterIP
 
