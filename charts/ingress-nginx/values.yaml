@@ -1,0 +1,29 @@
+ingress-nginx:
+  controller:
+    kind: DaemonSet
+    hostNetwork: true
+    dnsPolicy: ClusterFirstWithHostNet
+    
+    service:
+      type: ClusterIP
+
+    admissionWebhooks:
+      enabled: false
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 90Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+
+  config:
+    use-forwarded-headers: "true"
+    client-max-body-size: "50m"
+    ssl-redirect: "false"
