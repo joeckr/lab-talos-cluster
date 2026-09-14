@@ -15,4 +15,4 @@ jobs:
       helm-repos: |
         longhorn https://charts.longhorn.io
       dry-run: true
-      subpath: 'talos'
+      subpath: 'charts/talos'
