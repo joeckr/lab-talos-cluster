@@ -1,0 +1,9 @@
+apiVersion: v2
+name: longhorn-wrapper
+description: A wrapper chart for Longhorn on Talos Linux
+version: 0.1.0
+
+dependencies:
+  - name: longhorn
+    version: "~1.7.2"
+    repository: "https://charts.longhorn.io"
