@@ -1,19 +1,25 @@
-name: Publish Helm Charts
+name: Release
 
 on:
   push:
     branches: [ "main" ]
-    tags: [ "v*" ]
   workflow_dispatch:
 
 jobs:
+  release:
+    permissions:
+      contents: write
+    uses: joeckr/ci-templates/.github/workflows/semantic.yml@48916bb3c57520fe2d7b179ac228b29b0d1c83cb # v1.3.0
+
   helm:
+    needs: [release]
+    if: needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       packages: write
     uses: joeckr/ci-templates/.github/workflows/push-helm-ghcr.yml@30cbe9f13b7848656014f06761023041de9b514b # v1.9.1
     with:
       charts-dir: 'charts'
+      subpath: 'charts/talos'
       helm-repos: |
         longhorn https://charts.longhorn.io
-      subpath: 'charts/talos'

@@ -1,4 +1,4 @@
-name: TEST Publish Helm Charts
+name: TEST Release
 
 on:
   pull_request:
@@ -12,7 +12,13 @@ jobs:
     uses: joeckr/ci-templates/.github/workflows/push-helm-ghcr.yml@30cbe9f13b7848656014f06761023041de9b514b # v1.9.1
     with:
       charts-dir: 'charts'
-      helm-repos: |
-        longhorn https://charts.longhorn.io
       dry-run: true
       subpath: 'charts/talos'
+      helm-repos: |
+        longhorn https://charts.longhorn.io
+  release:
+    permissions:
+      contents: write
+    uses: joeckr/ci-templates/.github/workflows/semantic.yml@48916bb3c57520fe2d7b179ac228b29b0d1c83cb # v1.3.0
+    with:
+      dry-run: true
