@@ -20,3 +20,6 @@ jobs:
     uses: joeckr/ci-templates/.github/workflows/push-helm-ghcr.yml@30cbe9f13b7848656014f06761023041de9b514b # v1.9.1
     with:
       charts-dir: 'charts'
+      subpath: 'charts/talos'
+      helm-repos: |
+        longhorn https://charts.longhorn.io
