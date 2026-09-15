@@ -19,4 +19,4 @@ jobs:
       packages: write
     uses: joeckr/ci-templates/.github/workflows/push-helm-ghcr.yml@30cbe9f13b7848656014f06761023041de9b514b # v1.9.1
     with:
-      charts-dir: 'chart'
+      charts-dir: 'charts'
