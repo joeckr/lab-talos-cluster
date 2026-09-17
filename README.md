@@ -108,3 +108,13 @@ Commits must follow the [Conventional Commits](https://www.conventionalcommits.o
 Commit messages are validated locally on commit via the `hk` `commit-msg` hook and in CI via `commitlint`.
 
 Upon merging to `main`, the `release.yml` workflow automatically computes the next version, creates a Git tag, generates release notes, publishes a GitHub Release, and publishes Helm charts to GHCR. On pull requests, `test_release.yml` performs a dry-run to validate Helm packaging and preview release bumps.
+
+## Support
+
+If you find this project useful, consider supporting my work on [Ko-fi](https://ko-fi.com/joeckr):
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/joeckr)
+
+## License
+
+Please refer to the `LICENSE` file for details.
