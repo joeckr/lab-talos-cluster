@@ -18,24 +18,6 @@ run = """
 hk install --mise
 """
 
-[tasks.compose]
-description = "Run Docker Compose for local lab"
-run = """
-docker compose up -d
-"""
-
-[tasks.down]
-description = "Stop Docker Compose"
-run = """
-docker compose down
-"""
-
-[tasks.logs]
-description = "View Docker Compose logs"
-run = """
-docker compose logs -f
-"""
-
 [tasks.hk]
 description = "Run hk checks on all files"
 alias = "check"
@@ -45,8 +27,15 @@ hk check --all
 
 [tasks.helm-lint]
 description = "Lint all Helm charts in charts directory"
+depends = ["helm-dep"]
 run = """
 find charts -name "Chart.yaml" -exec dirname {} + | xargs helm lint
+"""
+
+[tasks.helm-dep]
+description = "Build Helm chart dependencies"
+run = """
+find charts -name "Chart.yaml" -exec dirname {} + | xargs -n1 helm dependency build
 """
 
 [tasks.trivy-fs]
