@@ -1,0 +1,44 @@
+[tools]
+betterleaks = "latest"
+"go:github.com/google/addlicense" = "v1.2.0"
+trivy = "v0.74.0"
+helm = "v3.14.0"
+actionlint = "v1.7.1"
+shellcheck = "latest"
+zizmor = "latest"
+hk = "latest"
+pkl = "latest"
+tombi = "latest"
+yamllint = "latest"
+
+[tasks.install]
+description = "Install tools, hook up hooks, and prepare environment"
+run = """
+hk install --mise
+"""
+
+[tasks.hk]
+description = "Run hk checks on all files"
+alias = "check"
+run = """
+hk check --all
+"""
+
+[tasks.helm-l]
+description = "Lint all Helm charts in charts directory"
+depends = ["helm-d"]
+run = """
+find charts -name "Chart.yaml" -exec dirname {} + | xargs helm lint
+"""
+
+[tasks.helm-d]
+description = "Build Helm chart dependencies"
+run = """
+find charts -name "Chart.yaml" -exec dirname {} + | xargs -n1 helm dependency build
+"""
+
+[tasks.trivy-fs]
+description = "Run Trivy on the file system"
+run = """
+trivy fs .
+"""
