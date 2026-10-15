@@ -3,11 +3,13 @@
 [![CI](https://github.com/joeckr/lab-talos-cluster/actions/workflows/lint.yml/badge.svg)](https://github.com/joeckr/lab-talos-cluster/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A dedicated home lab repository for deploying, documenting, operating, and extending a [Talos Linux](https://www.talos.dev/) Kubernetes cluster managed with [Talos Omni](https://omni.siderolabs.com/) and running virtualized on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment/overview).
+A dedicated "enterprise-adjacent" home lab repository for deploying, documenting, operating, and extending an open-source [Talos Linux](https://www.talos.dev/) Kubernetes cluster running virtualized on [Proxmox VE](https://www.proxmox.com/en/proxmox-virtual-environment/overview).
 
 > [!NOTE]
-> **Project Status: Active Work in Progress (WIP)**
-> This project is in its early stages and will be an evolving workspace over time as cluster components, automation scripts, hardening guidelines, Omni configurations, and custom Helm charts are developed and tested.
+> **Project Status & Architecture Philosophy: "Enterprise Adjacent"**
+> This repository is built as an **enterprise-adjacent** homelab. It adheres to enterprise production standards by avoiding dependencies on proprietary software or components that require commercial/business licenses (such as enterprise SaaS management layers).
+>
+> *Note on Talos Omni*: [Talos Omni](https://omni.siderolabs.com/) provides a managed web UI and WireGuard mesh (SideroLink) that is free for personal/homelab use. If you are building a personal cluster and want automated onboarding via a GUI, Omni is a great option. However, because commercial/enterprise use of Omni requires a paid business license, this repository intentionally standardizes on native, open-source Talos Linux operations (`talosctl`, declarative machine configs) to mirror true license-free enterprise architectures.
 
 ---
 
@@ -15,12 +17,12 @@ A dedicated home lab repository for deploying, documenting, operating, and exten
 
 The purpose of this repository is to serve as the single source of truth for:
 
-- **Cluster Management via Talos Omni**: Utilizing [Talos Omni](https://omni.siderolabs.com/) for automated machine registration, cluster lifecycle operations, configuration patch distribution, and secure management overlays.
+- **Declarative Talos Linux Management**: Utilizing native `talosctl`, the Talos Image Factory, and declarative YAML machine configurations (`controlplane.yaml`, `worker.yaml`, and config patches) for end-to-end cluster lifecycle operations.
 - **Cluster Documentation**: Node topology, configuration patch sets, Talos machine configurations, and day-2 operations.
 - **Proxmox VE & VM Hardening**: Documenting best practices for provisioning and hardening the underlying Proxmox VE hypervisor and Talos VM instances (virtual hardware settings, networking bridges, storage, and security configurations).
 - **Helm Charts (`charts/`)**: Developing, packaging, and maintaining custom and upstream-extended Helm charts configured for secure, rootless operation.
-- **Automation & Scripting (`scripts/`)**: Shell scripts and tooling for bootstrap workflows, cluster lifecycle management, maintenance, `omnictl`, and `talosctl` operations.
-- **Future Architecture Exploration**: Monitoring the development of [Talos Director](https://www.siderolabs.com/) and evaluating whether to eventually transition from Omni once Director becomes generally available and matures.
+- **Automation & Scripting (`scripts/`)**: Shell scripts and tooling for bootstrap workflows, cluster lifecycle management, maintenance, and `talosctl` / `kubectl` operations.
+- **Open-Source Infrastructure**: Ensuring all cluster operations run on open-source, vendor-neutral components with zero vendor lock-in.
 
 ---
 
@@ -28,11 +30,11 @@ The purpose of this repository is to serve as the single source of truth for:
 
 ```text
 ┌────────────────────────────────────────────────────────┐
-│                   Talos Omni Plane                     │
-│  (Machine Registration, WireGuard Mesh, Config Patches,│
-│   Cluster Orchestration, omnictl & API endpoints)      │
+│         Management Workstation / CI Automation         │
+│  (talosctl, kubectl, helm, Declarative Machine Configs)│
 └──────────────────────────┬─────────────────────────────┘
-                           │ WireGuard (SideroLink) / gRPC
+                           │ Talos API (mTLS / Port 50000)
+                           │ Kubernetes API (TLS / Port 6443)
 ┌──────────────────────────▼─────────────────────────────┐
 │                      Proxmox VE                        │
 │  ┌──────────────────────────────────────────────────┐  │
@@ -49,11 +51,10 @@ The purpose of this repository is to serve as the single source of truth for:
 └────────────────────────────────────────────────────────┘
 ```
 
-- **Management Plane**: [Talos Omni](https://omni.siderolabs.com/) — manages machine discovery, automated installation, cluster creation, node maintenance, and encrypted WireGuard overlay networking (SideroLink).
-- **Operating System**: [Talos Linux](https://www.talos.dev/) — an immutable, secure, and minimal Linux distribution designed specifically for Kubernetes (no SSH, no shell, fully API-driven via `talosctl` and Omni).
+- **Management & Control**: Driven directly via `talosctl` over secure mutual TLS (mTLS on TCP port 50000) with declarative machine configs generated locally or via CI/CD.
+- **Operating System**: [Talos Linux](https://www.talos.dev/) — an immutable, secure, and minimal Linux distribution designed specifically for Kubernetes (no SSH, no shell, fully API-driven via `talosctl`).
 - **Hypervisor**: [Proxmox VE](https://www.proxmox.com/) — hosting Talos control-plane and worker VMs with hardened virtual hardware configurations.
-- **Operations & Tooling**: Driven via `omnictl`, `talosctl`, `kubectl`, and `helm`.
-- **Future Evolution**: Evaluating Talos Director once released and stable to assess potential migration or architectural shifts from Omni.
+- **Operations & Tooling**: Driven via `talosctl`, `kubectl`, and `helm`.
 
 ---
 
@@ -73,12 +74,19 @@ The purpose of this repository is to serve as the single source of truth for:
 │       ├── Chart.yaml
 │       ├── values.yaml
 │       └── templates/
+├── config/                      # Declarative cluster & machine configuration patches
+│   └── controlplane-patch.yaml  # PSS restricted admission & control-plane workload scheduling
 ├── guides/                      # Step-by-step sequential setup & operational guides
 │   ├── README.md                # Guide index & status overview
-│   ├── 00-prereqs.md            # Workstation tooling, Proxmox & Omni prerequisites
-│   └── 01-proxmox-setup.md      # Proxmox host setup, clustering, and hardening
+│   ├── 00-prereqs.md            # Workstation tooling, Proxmox & Talos prerequisites
+│   ├── 01-proxmox-setup.md      # Proxmox host setup, clustering, and hardening
+│   └── 02-install-talos.md      # Talos boot media, VM provisioning, machine configs & bootstrap
 ├── scripts/                     # Operational, provisioning, and maintenance scripts
-│   └── template.sh              # Starter script placeholder
+│   ├── after-config.sh          # Control-plane bootstrap trigger
+│   ├── apply-worker.sh          # Worker node configuration application & join watcher
+│   ├── gen-config.sh            # Talos cluster config generator & initial CP apply
+│   ├── kube-config.sh           # Kubeconfig retrieval and node connectivity verification
+│   └── patch-controlplane.sh    # Declarative control-plane patch application
 ├── hk.pkl                       # Fast git hooks (hk) configuration
 ├── mise.toml                    # Tool version management & mise tasks
 └── README.md
@@ -164,10 +172,10 @@ helm uninstall lab-cluster
 
 ## Security & Hardening Posture
 
-1. **Talos OS & Omni Security**:
+1. **Talos OS & Cluster Security**:
    - Immutable root filesystem and minimal attack surface.
-   - Node-to-Omni communication encrypted via WireGuard tunnels (SideroLink) and authenticated gRPC APIs (no interactive shell or SSH daemon).
-   - Centralized RBAC and access delegation through `omnictl` and generated kubeconfig/talosconfig contexts.
+   - Host administration executed strictly via authenticated gRPC APIs over mutual TLS (mTLS on TCP port 50000) — no interactive shell, SSH daemon, or console credentials.
+   - Client authentication and role delegation enforced via `talosconfig` and `kubeconfig`.
 2. **Pod Security Standards (PSS)**:
    - Chart templates enforce `Restricted` Kubernetes Pod Security Standards out of the box:
      - Non-root execution (`runAsNonRoot: true`, `readOnlyRootFilesystem: true`).
@@ -185,11 +193,10 @@ helm uninstall lab-cluster
 ## Roadmap & Planning
 
 - [x] **Proxmox VE Setup & Hardening Guide**: Documented hypervisor installation, clustering, storage, and host hardening in [`guides/01-proxmox-setup.md`](guides/01-proxmox-setup.md).
-- [ ] **Omni Machine Templates & Config Patches**: Documenting and versioning Omni machine configurations, cluster patches, and labels.
-- [ ] **Talos Node Configurations**: Storing baseline machine configs and overlays for control-plane and worker nodes.
+- [x] **Talos Installation & Bootstrap Guide**: Documented Talos Image Factory, VM provisioning, declarative machine configurations, and cluster bootstrapping in [`guides/02-install-talos.md`](guides/02-install-talos.md).
+- [x] **Talos Node Configurations & Patches**: Declarative overlays (`config/controlplane-patch.yaml`) and lifecycle automation scripts (`scripts/`) for control-plane and worker nodes.
 - [ ] **Cluster Networking & Ingress**: Defining CNI (e.g., Cilium or Flannel) setup and Ingress/Gateway API configurations.
 - [ ] **Helm Chart Library Expansion**: Adding workload charts and extending upstream charts for home lab services.
-- [ ] **Talos Director Assessment**: Monitoring Sidero Labs' Talos Director release and evaluating its viability as an alternative or evolution to Omni as it matures.
 
 ---
 

@@ -264,4 +264,4 @@ To configure TOTP:
 ## Next Steps
 
 With the hypervisor hosts installed, updated, clustered, partitioned, and hardened, proceed to:
-- **`02-omni-machine-registration.md`** (Generating Omni boot media, setting up VM definitions, and onboarding nodes)
+- **[02-install-talos.md](02-install-talos.md)** (Generating Talos installation media, creating VMs, applying machine configs, and bootstrapping the cluster)

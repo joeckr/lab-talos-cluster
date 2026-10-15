@@ -1,6 +1,6 @@
 # 00 - Prerequisites & Setup Planning
 
-This guide covers workstation tooling, infrastructure requirements, Talos Omni access, and IP/network planning required before provisioning nodes in Proxmox VE.
+This guide covers workstation tooling, infrastructure requirements, Talos Linux prerequisites, and IP/network planning required before provisioning nodes in Proxmox VE.
 
 ---
 
@@ -26,30 +26,24 @@ mise run install
 
 | Tool | Purpose | Installation / Verification |
 |---|---|---|
-| [`omnictl`](https://omni.siderolabs.com/docs/how-to-guides/omnictl/) | Talos Omni management CLI | `omnictl version` |
 | [`talosctl`](https://www.talos.dev/latest/introduction/getting-started/#talosctl) | Talos Linux administrative CLI | `talosctl version --client` |
 | [`kubectl`](https://kubernetes.io/docs/tasks/tools/) | Kubernetes cluster interaction | `kubectl version --client` |
 | [`helm`](https://helm.sh/) | Package manager for Kubernetes charts | `helm version` (managed via `mise`) |
 
 > [!TIP]
-> You can download `omnictl` directly from your Talos Omni instance web interface under your user account profile or from the Sidero Labs release portal.
+> **Installing `talosctl`**:
+> On macOS via Homebrew:
+> ```bash
+> brew install siderolabs/tap/talosctl
+> ```
+> Or install directly from the Sidero Labs releases:
+> ```bash
+> curl -sL https://talos.dev/install | sh
+> ```
 
 ---
 
 ## 2. Infrastructure Requirements (Proxmox VE)
-
-### Lab Host Hardware (Current Environment)
-
-The current lab infrastructure consists of **2 Proxmox VE hypervisor nodes** (repurposed custom desktop PCs), with plans to scale out with additional nodes in the future:
-
-| Node | CPU | Memory | Storage Pools | Role / Notes |
-|---|---|---|---|---|
-| **PVE Node 1** | Intel Core i7-9700K (8C / 8T) | 32 GB RAM | • 1x 1 TB NVMe SSD<br>• 1x 1 TB SATA SSD | Reused desktop; initial control-plane & worker VM hosting |
-| **PVE Node 2** | AMD Ryzen 9 5900X (12C / 24T) | 64 GB RAM | • 2x 2 TB drives | Reused desktop; high-capacity compute and storage pool |
-
-> [!NOTE]
-> **Cluster Expansion**:
-> Initial cluster VMs are distributed across these 2 physical hosts. Additional Proxmox VE nodes will be incorporated over time as capacity needs expand and to achieve multi-node hypervisor quorum.
 
 ### VM Sizing Baselines & Hardware Defaults
 
@@ -68,33 +62,36 @@ When provisioning Talos VMs on these hosts, follow these resource baselines and 
 
 ---
 
-## 3. Talos Omni Prerequisites
+## 3. Talos Linux Architecture & Licensing
 
-### Deployment Model: SaaS vs. Self-Hosted
+### Architectural Standard: Enterprise-Adjacent Homelab
 
-This lab environment is currently being developed and operated using **[Talos Omni SaaS](https://omni.siderolabs.com/)**:
+This homelab is intentionally designed around an **"enterprise-adjacent"** operating standard:
 
-- **Omni SaaS (Current Setup)**:
-  - **Free for Homelab / Personal Use**: Sidero Labs provides a generous free community tier for personal and homelab clusters, removing the need to manage a separate control-plane cluster.
-  - Quick setup with zero infrastructure overhead. Register and log in at [omni.siderolabs.com](https://omni.siderolabs.com/).
-- **Self-Hosted Option**:
-  - Omni can also be self-hosted on-premises (in an existing Kubernetes cluster or dedicated VM) if you require total local control or air-gapped operations.
-  - Review the [Talos Omni Self-Hosting Guide](https://omni.siderolabs.com/docs/how-to-guides/install-omni/) for architectural requirements and deployment steps.
+- **Fully Open-Source & License-Free**: We avoid dependencies on software that requires commercial or business licenses in enterprise environments. All cluster operations rely strictly on the open-source [Talos Linux](https://www.talos.dev/) distribution, native `talosctl`, standard Kubernetes manifests, and open-source tooling.
+- **Direct API & Declarative Configuration**: Machines are configured, bootstrapped, and upgraded using native `talosctl` commands and version-controlled declarative YAML configurations (`controlplane.yaml`, `worker.yaml`, and config patches).
+- **Mutual TLS (mTLS) Security**: Host-level administrative communication runs directly between your workstation and the Talos OS nodes over gRPC on TCP port `50000`, authenticated via client certificates in `talosconfig`.
 
-> [!TIP]
-> For general guides, machine classes, and cluster templates, consult the [Official Talos Omni Documentation](https://omni.siderolabs.com/docs/).
+> [!NOTE]
+> **A Note on Talos Omni for Personal Homelabs**:
+> [Talos Omni](https://omni.siderolabs.com/) (both SaaS and self-hosted) is an excellent commercial product by Sidero Labs that features automated node registration, WireGuard overlay networking (SideroLink), and a clean web management dashboard.
+>
+> Sidero Labs generously provides a **free community tier for personal and homelab use**. If you prefer a managed web console and simplified node onboarding for personal projects, Omni is an option worth exploring.
+>
+> However, because Omni requires a commercial license in business settings, this repository intentionally adheres to native, open-source Talos Linux tooling to mirror true enterprise-grade, license-free production architectures.
 
-### Setup & Authentication Steps
+### Network Ports & Endpoint Planning
 
-1. **Omni Account & Console Access**:
-   - Log in to your [Talos Omni Console](https://omni.siderolabs.com/).
-2. **Omni Service Account / omnictl Config**:
-   - Authenticate `omnictl` on your local management workstation:
-     ```bash
-     # Configure context for Omni SaaS (default API endpoint: https://api.omni.siderolabs.io)
-     omnictl config set-context lab-cluster --api-endpoint https://api.omni.siderolabs.io
-     omnictl login
-     ```
+Ensure the following ports and addresses are planned in your local network:
+
+| Port / Protocol | Component | Purpose |
+|---|---|---|
+| `50000 / TCP` | Talos API (`apid`) | Administrative management via `talosctl` (mTLS) |
+| `6443 / TCP` | Kubernetes API Server | Cluster administration via `kubectl` (TLS) |
+| `2379-2380 / TCP` | `etcd` | Control-plane etcd consensus and peer traffic |
+| `51871 / UDP` | WireGuard / KubeSpan (Optional) | Encrypted node-to-node overlay networking |
+
+For high-availability clusters, plan a **Control Plane VIP** (Virtual IP) or a local DNS entry (e.g. `k8s.lab.internal`) that points to the control-plane node(s) on port `6443`. For initial setups, a designated control-plane IP or Talos-managed VIP can be configured in machine configs.
 
 ---
 
